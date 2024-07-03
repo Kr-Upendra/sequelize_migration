@@ -1,0 +1,29 @@
+const path = require('path');
+
+// Register ts-node to handle TypeScript files
+require('ts-node/register');
+
+module.exports = {
+  'config': path.resolve('src/sequelize', 'config.ts'),
+  'migrations-path': path.resolve('src/sequelize', 'migrations'),
+  'seeders-path': path.resolve('src/sequelize', 'seeders'),
+  'models-path': path.resolve('src/sequelize', 'models'),
+};
+
+
+// module.exports = {
+//    development: {
+//       dialect: 'postgres',
+//       url: "postgres://postgres:test@localhost:5432/pg_migrations_dev"
+//    },
+//    test: {
+//       dialect: 'postgres',
+//       url: "postgres://postgres:test@localhost:5432/pg_migrations_test"
+//    },
+//    production: {
+//       dialect: 'postgres',
+//       url: "postgres://postgres:test@localhost:5432/pg_migrations_prod"
+//    },
+// }
+
+// 
