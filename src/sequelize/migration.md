@@ -1,6 +1,8 @@
 # NestJS, Sequelize and Postgres Migration Thing
 
-[Medium Blog Post]()
+
+[Medium](https://medium.com/@kupendra.dev/nestjs-sequelize-and-postgres-mastering-migrations-898e0723c938)
+
 
 This repository demonstrates how to set up migrations for a NestJS application using Sequelize ORM with a Postgres database. We'll leverage TypeScript throughout the process for enhanced type safety.
 
