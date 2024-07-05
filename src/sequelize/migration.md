@@ -193,7 +193,11 @@ export = {
 #### 6. After these Migrate these changes into your DB. To migrate simply run this command
 
 ```properties
+<<<<<<< HEAD
 yarn sequelize-cli db:migrate
+=======
+  yarn sequelize-cli db:migrate
+>>>>>>> dbbdbdc623c8b9a14bdb0ade01994434535b5dc3
 ```
 
 This will create a table for migration and a table for users inside your Postgres Database. In the migration table it will simply store migration history.
@@ -228,13 +232,13 @@ export = {
 #### 9. In last to sync your db with new field run again migration command.
 
 ```properties
-     yarn sequelize-cli db:migrate
+  yarn sequelize-cli db:migrate
 ```
 
 #### 10. Check your migration status.
 
 ```properties
-     yarn sequelize-cli db:migrate:status
+  yarn sequelize-cli db:migrate:status
 ```
 
 #### 11. Rollback the Last Migration
@@ -242,7 +246,7 @@ export = {
 To rollback the last migration that was applied, use the following command:
 
 ```properties
-   yarn sequelize-cli db:migrate:undo
+  yarn sequelize-cli db:migrate:undo
 ```
 
 let's generate seed to create some fake users in table using seeders.
