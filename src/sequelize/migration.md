@@ -1,24 +1,87 @@
 # NestJS, Sequelize and Postgres Migration Thing
 
-<b>Warning</b>: Use Sequelize version 6.2.0 to work with typescript.
+[Medium Blog Post]()
 
-Note: After setting up your Nestjs Project with Postgres and Sequelize.
+This repository demonstrates how to set up migrations for a NestJS application using Sequelize ORM with a Postgres database. We'll leverage TypeScript throughout the process for enhanced type safety.
 
-### Get Started With Migration Thing
+2. Create a nestjs project
+
+```bash
+nest new <project_name>
+```
+
+3. After completing creating a nestjs project install require packages.
+
+```bash
+yarn add sequelize sequelize-typescript pg pg-hstore @nestjs/config
+
+yarn add @types/sequelize --dev
+```
+
+4. Now create a .env file and add database configuration and other things like port number. You can multiple database based on enviroment veriable. for example
+
+```bash
+PORT=8080
+NODE_ENV='development'
+DATABASE_URL='postgres://<DB_USERNAME>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/TEST_DB_NAME'
+DATABASE_URL='postgres://<DB_USERNAME>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/DEVELOPMENT_DB_NAME'
+DATABASE_URL='postgres://<DB_USERNAME>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/PRODUCTION_DB_NAME'
+```
+
+5. Now let's make changes in main.ts file to serve backend on specified port.
+
+```javascript
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const port = process.env.PORT || 5000;
+  await app.listen(port);
+}
+bootstrap();
+```
+
+6. Let's make changes in app.module.ts and connect our app with database.
+
+```javascript
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { SequelizeModule } from '@nestjs/sequelize';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    SequelizeModule.forRoot({
+      uri: process.env.DATABASE_URL,
+      models: [],
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+7. After setting up our nestjs application let's get started with setting migration thing.
+
+install require package to get started with sequelize migration.
+
+<b>Warning</b>: Use sequelize-cli version 6.2.0 to work with typescript.
 
 #### 1. Install Sequelieze-cli package.
 
 ```properties
-    yarn add sequelize-cli@6.2.0 --dev
-    // or
-    npm install sequelize-cli@6.2.0 --save-dev
+yarn add sequelize-cli@6.2.0 --dev
 ```
 
 #### 2. Create Sequelize migration directory using this
 
-Create .sequelizerc file with following content. You can even modify directory structure.
+Create .sequelizerc file with following content. You can even modify directory structure for your migration directory.
 
 ```javascript
+const path = require('path');
+
+require('ts-node/register'); // add this to work with typescript
+
 module.exports = {
   config: path.resolve('src/sequelize', 'config.ts'),
   'migrations-path': path.resolve('src/sequelize', 'migrations'),
@@ -30,61 +93,99 @@ module.exports = {
 #### 3. After setting up your directory structure for sequelize migration. Run this command to generate these directories and files.
 
 ```properties
-    yarn sequelize init
+yarn sequelize init
 ```
 
-#### 4. After all this you can Now generate migration file to write your migrations using this command. [Take Help of internet if it's not work for you.]
+Now make changes in config.ts file with following code.
+
+```typescript
+import { Dialect } from 'sequelize';
+
+interface ISequelizeConfig {
+  [key: string]: {
+    dialect: Dialect;
+    url: string;
+  };
+}
+
+const config: ISequelizeConfig = {
+  development: {
+    dialect: 'postgres',
+    url: process.env.DATABASE_URL,
+  },
+  test: {
+    dialect: 'postgres',
+    url: process.env.DATABASE_URL,
+  },
+  production: {
+    dialect: 'postgres',
+    url: process.env.DATABASE_URL,
+  },
+};
+
+export = config;
+```
+
+NOTE: If this show error then install dotenv package and use in this file as we usually use dotenv package.
+
+- Make changes in models/index.js file with following code.
+
+```javascript
+// packages that are imported
+
+const sequelize = new Sequelize(`${config.url}`, config);
+
+// fs file configuration
+```
+
+#### 4. After all this you can Now generate migration file to write your migrations using this command.
 
 ```properties
-    yarn sequelize-cli migration:generate --name create-user-table
+yarn sequelize-cli migration:generate --name create-user-table
 ```
 
-This will generate a migration file inside your migrations directory with something like following pattern {20240703161738-create-user-table.js/.ts}
+This will generate a migration file inside your migrations directory with something like following pattern {20240703161738-create-user-table.js/.ts}, convert this into typescript.
 
 #### 5. Write your migration in this file.
 
-```javascript
-'use strict';
+```typescript
+// src/sequelize/migrations/{timestamp}-create-users-table.ts
+import { QueryInterface, DataTypes } from 'sequelize';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    return queryInterface.createTable('users', {
+export = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.createTable('users', {
       id: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         autoIncrement: true,
         unique: true,
         primaryKey: true,
       },
       fullname: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
       },
       email: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
       },
-      password: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
       createdAt: {
-        type: Sequelize.DATE,
+        type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('now'),
+        defaultValue: DataTypes.NOW,
       },
       updatedAt: {
-        type: Sequelize.DATE,
+        type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('now'),
+        defaultValue: DataTypes.NOW,
       },
     });
   },
 
-  async down(queryInterface, Sequelize) {
-    return queryInterface.dropTable('users');
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.dropTable('users');
   },
 };
 ```
@@ -92,33 +193,34 @@ module.exports = {
 #### 6. After these Migrate these changes into your DB. To migrate simply run this command
 
 ```properties
-    yarn sequelize-cli db:migrate
+yarn sequelize-cli db:migrate
 ```
 
-This will create a table for migration and a table for users inside your Postgres Database.
+This will create a table for migration and a table for users inside your Postgres Database. In the migration table it will simply store migration history.
 
-#### 7. Update your table fields. For example to add a new table inside your users table Create a new migration called add-passwords-field
+#### 7. Update your table fields. For example to add a new field inside your users table Create a new migration with following name add-about-field
 
 ```properties
-    yarn sequelize-cli migration:generate --name add-passwords-field
+yarn sequelize-cli migration:generate --name add-about-field
 ```
 
-#### 8. This will generate another migration file inside your migration directory. where you can perform adding a new field inside users table. Update your add-passwords-field migration file with following code to add new field password.
+#### 8. This will generate another migration file inside your migration directory. where you can perform adding a new field inside users table. Update your add-about-field migration file with following code to add new field about.
 
-```javascript
-'use strict';
+```typescript
+// src/sequelize/migrations/{timestamp}-add-about-field.ts
+import { QueryInterface, DataTypes } from 'sequelize';
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.changeColumn('users', 'password', {
-      type: DataTypes.STRING,
-      allowNull: false,
+export = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.addColumn('users', 'about', {
+      type: DataTypes.TEXT,
+      allowNull: true,
       defaultValue: '',
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('users', 'password');
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.removeColumn('users', 'about');
   },
 };
 ```
@@ -143,12 +245,36 @@ To rollback the last migration that was applied, use the following command:
    yarn sequelize-cli db:migrate:undo
 ```
 
-#### 12. Rollback to a specific migration
+let's generate seed to create some fake users in table using seeders.
 
-If you want to rollback to a specific migration, you can specify the name of the migration file:
+run this command to generate your first seed file
 
 ```properties
-   yarn sequelize-cli db:migrate:undo --to {migration-file-name}
+yarn sequelize-cli seed:generate --name demo-users
 ```
 
-[Learn More](https://chatgpt.com/c/8b64aeff-ea7a-4c26-86aa-43bb7d1bd1fe)
+Change filetype to typescript and change the code with following
+
+```ts
+// src/sequelize/seeders/{timestamp}-demo_users.ts
+import { QueryInterface } from 'sequelize';
+
+export = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.bulkInsert('users', [
+      {
+        fullname: 'John Doe',
+        email: 'johndoe@user.io',
+        about: 'Lorem Ipsum sit amet dollor, Lorem Ipsum sit amet dollor.',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      // add more users
+    ]);
+  },
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.bulkDelete('users', null, {});
+  },
+};
+```

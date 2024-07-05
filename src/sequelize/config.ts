@@ -1,4 +1,10 @@
 import { Dialect } from 'sequelize';
+/*
+use this when ENV IS NOT WORKING
+import * as dotenv from "dotenv";
+dotenv.config();
+
+*/
 
 interface ISequelizeConfig {
   [key: string]: {
@@ -10,15 +16,15 @@ interface ISequelizeConfig {
 const config: ISequelizeConfig = {
   development: {
     dialect: 'postgres',
-    url: 'postgres://postgres:test@localhost:5432/pg_migrations_dev',
+    url: process.env.DATABASE_URL || '',
   },
   test: {
     dialect: 'postgres',
-    url: 'postgres://postgres:test@localhost:5432/pg_migrations_test',
+    url: process.env.DATABASE_URL || '',
   },
   production: {
     dialect: 'postgres',
-    url: 'postgres://postgres:test@localhost:5432/pg_migrations_prod',
+    url: process.env.DATABASE_URL || '',
   },
 };
 
